@@ -128,7 +128,7 @@ set -x
 echo 'save ""' >> /etc/redis/redis.conf
 
 # Make redis use a unix domain socket and disable TCP sockets
-sed -ie "s/port 6379/port 0/" /etc/redis/redis.conf
+sed -ie "s/port 6380/port 0/" /etc/redis/redis.conf
 echo "unixsocket /var/run/redis/redis.sock" >> /etc/redis/redis.conf
 echo "unixsocketperm 777" >> /etc/redis/redis.conf
 mkdir -p /var/run/redis

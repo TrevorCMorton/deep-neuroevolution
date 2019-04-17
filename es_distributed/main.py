@@ -64,7 +64,7 @@ def master(algo, exp_str, exp_file, master_socket_path, log_dir):
 @cli.command()
 @click.option('--algo')
 @click.option('--master_host', required=True)
-@click.option('--master_port', default=6379, type=int)
+@click.option('--master_port', default=6380, type=int)
 @click.option('--relay_socket_path', required=True)
 @click.option('--num_workers', type=int, default=0)
 def workers(algo, master_host, master_port, relay_socket_path, num_workers):
