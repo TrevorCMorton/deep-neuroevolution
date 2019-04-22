@@ -1,4 +1,5 @@
 from .es import *
+from .ns import *
 
 
 GATask = namedtuple('GATask', ['params', 'population', 'ob_mean', 'ob_std', 'timestep_limit'])
@@ -22,12 +23,12 @@ def setup(exp, single_threaded):
 
 def rollout_and_update_ob_stat(policy, env, timestep_limit, rs, task_ob_stat, calc_obstat_prob):
     if policy.needs_ob_stat and calc_obstat_prob != 0 and rs.rand() < calc_obstat_prob:
-        rollout_rews, rollout_len, obs = policy.rollout(
+        rollout_rews, rollout_len, obs, rollout_nov = policy.rollout(
             env, timestep_limit=timestep_limit, save_obs=True, random_stream=rs)
         task_ob_stat.increment(obs.sum(axis=0), np.square(obs).sum(axis=0), len(obs))
     else:
         rollout_rews, rollout_len, rollout_nov = policy.rollout(env, timestep_limit=timestep_limit, random_stream=rs)
-    return rollout_rews, rollout_len
+    return rollout_rews, rollout_len, rollout_nov
 
 
 def run_master(master_redis_cfg, log_dir, exp):
@@ -137,7 +138,17 @@ def run_master(master_redis_cfg, log_dir, exp):
         returns_n2 = list(population_score[:num_elites])
         for r in curr_task_results:
             noise_inds_n.extend(r.noise_inds_n)
-            returns_n2.extend(r.returns_n2)
+
+            if exp['algo_type'] == 'ns':
+                for nov_vector in r.nov_vectors:
+                    master.add_to_novelty_archive(nov_vector)
+
+                for nov_vector in r.nov_vectors:
+                    archive = master.get_archive()
+                    nov_val = compute_novelty_vs_archive(archive, nov_vector, exp['novelty_search']['k'], True)
+                    returns_n2.extend([nov_val])
+            else:
+                returns_n2.extend(r.returns_n2)
         noise_inds_n = np.array(noise_inds_n)
         returns_n2 = np.array(returns_n2)
         lengths_n2 = np.array([r.lengths_n2 for r in curr_task_results])
@@ -227,7 +238,7 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
         if rs.rand() < config.eval_prob:
             # Evaluation: noiseless weights and noiseless actions
             policy.set_trainable_flat(task_data.params)
-            eval_rews, eval_length, eval_nov = policy.rollout(env)  # eval rollouts don't obey task_data.timestep_limit
+            eval_rews, eval_length, _ = policy.rollout(env)  # eval rollouts don't obey task_data.timestep_limit
             eval_return = eval_rews.sum()
             logger.info('Eval result: task={} return={:.3f} length={}'.format(task_id, eval_return, eval_length))
             worker.push_result(task_id, Result(
@@ -244,7 +255,7 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
             ))
         else:
             # Rollouts with noise
-            noise_inds, returns, signreturns, lengths = [], [], [], []
+            noise_inds, returns, signreturns, lengths, nov_vectors = [], [], [], [], []
             task_ob_stat = RunningStat(env.observation_space.shape, eps=0.)  # eps=0 because we're incrementing only
 
             while not noise_inds or time.time() - task_tstart < min_task_runtime:
@@ -263,9 +274,11 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                     v += config.noise_stdev * noise.get(seed, policy.num_params)
                 policy.set_trainable_flat(v)
 
-                rews_pos, len_pos = rollout_and_update_ob_stat(
+                rews_pos, len_pos, rollout_nov = rollout_and_update_ob_stat(
                     policy, env, task_data.timestep_limit, rs, task_ob_stat, config.calc_obstat_prob)
                 noise_inds.append(seeds)
+
+                nov_vectors.append(rollout_nov)
                 returns.append(rews_pos.sum())
                 signreturns.append(np.sign(rews_pos).sum())
                 lengths.append(len_pos)
@@ -280,5 +293,6 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                 eval_length=None,
                 ob_sum=None if task_ob_stat.count == 0 else task_ob_stat.sum,
                 ob_sumsq=None if task_ob_stat.count == 0 else task_ob_stat.sumsq,
-                ob_count=task_ob_stat.count
+                ob_count=task_ob_stat.count,
+                nov_vectors=nov_vectors
             ))

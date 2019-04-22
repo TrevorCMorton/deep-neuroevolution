@@ -19,7 +19,8 @@ Result = namedtuple('Result', [
     'worker_id',
     'noise_inds_n', 'returns_n2', 'signreturns_n2', 'lengths_n2',
     'eval_return', 'eval_length',
-    'ob_sum', 'ob_sumsq', 'ob_count'
+    'ob_sum', 'ob_sumsq', 'ob_count',
+    'nov_vectors'
 ])
 
 

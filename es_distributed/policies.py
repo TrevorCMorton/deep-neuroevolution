@@ -491,8 +491,17 @@ class GAAtariPolicy(Policy):
                 random_stream.seed(policy_seed)
 
         ob = env.reset()
+
+        actions_chosen = np.zeros((len(env.action_space),))
+        repetitions = np.zeros((len(env.action_space),))
+        prev_action = None
         for _ in range(timestep_limit):
             ac = self.act(ob[None], random_stream=random_stream)[0]
+            actions_chosen[ac] += 1
+
+            if ac != prev_action:
+                repetitions[ac] += 1
+                prev_action = ac
 
             if save_obs:
                 obs.append(ob)
@@ -501,14 +510,15 @@ class GAAtariPolicy(Policy):
 
             t += 1
             if render:
-                env.render()
+                env.render(mode='human')
             if done:
                 break
 
         # Copy over final positions to the max timesteps
         rews = np.array(rews, dtype=np.float32)
-        novelty_vector = env.unwrapped._get_ram() # extracts RAM state information
+        # novelty_vector = env.unwrapped._get_ram() # extracts RAM state information
+        novelty_vector = [actions_chosen / t, actions_chosen / repetitions, rews.sum() / t, [rews.sum()], [float(t == timestep_limit)]]
         if save_obs:
-            return rews, t, np.array(obs), np.array(novelty_vector)
-        return rews, t, np.array(novelty_vector)
+            return rews, t, np.array(obs), np.concatenate(novelty_vector)
+        return rews, t, np.concatenate(novelty_vector)
 
