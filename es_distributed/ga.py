@@ -251,7 +251,8 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                 eval_length=eval_length,
                 ob_sum=None,
                 ob_sumsq=None,
-                ob_count=None
+                ob_count=None,
+                nov_vectors=None
             ))
         else:
             # Rollouts with noise
