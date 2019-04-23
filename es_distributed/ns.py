@@ -29,7 +29,7 @@ def compute_novelty_vs_archive(archive, novelty_vector, k, normalize = False):
     distances = np.array(distances)
     top_k_indicies = (distances).argsort()[:k]
     top_k = distances[top_k_indicies]
-    if len(top_k) != 0:
+    if len(top_k) >= k:
         return top_k.mean()
     else:
         return 0
