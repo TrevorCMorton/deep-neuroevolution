@@ -205,7 +205,7 @@ def run_master(master_redis_cfg, log_dir, exp):
             import os.path as osp
             filename = 'snapshot_iter{:05d}_rew{}.h5'.format(
                 curr_task_id,
-                np.nan if not eval_rets else int(np.mean(eval_rets))
+                np.nan if not eval_rets else '%.3f'%(np.mean(eval_rets))
             )
             assert not osp.exists(filename)
             policy.save(filename)
