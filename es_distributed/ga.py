@@ -141,8 +141,8 @@ def run_master(master_redis_cfg, log_dir, exp):
             returns_n2.extend(r.returns_n2)
 
             # Update novelty archive
-            for nov_vector in r.nov_vectors:
-                master.add_to_novelty_archive(nov_vector)
+            #for nov_vector in r.nov_vectors:
+            #    master.add_to_novelty_archive(nov_vector)
 
         noise_inds_n = np.array(noise_inds_n)
         returns_n2 = np.array(returns_n2)
@@ -200,12 +200,15 @@ def run_master(master_redis_cfg, log_dir, exp):
         tlogger.record_tabular("TimeElapsed", step_tend - tstart)
         tlogger.dump_tabular()
 
+        bc_mean = get_mean_bc(env, policy, config.timesteps_per_batch, 10)
+        master.add_to_novelty_archive(bc_mean)
+
         # if config.snapshot_freq != 0 and curr_task_id % config.snapshot_freq == 0:
         if config.snapshot_freq != 0:
             import os.path as osp
             filename = 'snapshot_iter{:05d}_rew{}.h5'.format(
                 curr_task_id,
-                np.nan if not eval_rets else '%.3f'%(np.mean(eval_rets))
+                np.nan if not eval_rets else '%.3f'%(population_score[0])
             )
             assert not osp.exists(filename)
             policy.save(filename)
