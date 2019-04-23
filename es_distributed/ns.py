@@ -18,7 +18,7 @@ def compute_novelty_vs_archive(archive, novelty_vector, k, normalize = False):
 
     if normalize:
         for point in archive:
-            max_vector = max(point.astype(np.float), max_vector)
+            max_vector = np.maximum(point.astype(np.float), max_vector)
 
     for point in archive:
         distances.append(euclidean_distance(point.astype(np.float) / max_vector, nov / max_vector))
