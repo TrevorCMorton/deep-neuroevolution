@@ -90,7 +90,7 @@ def run_master(master_redis_cfg, log_dir, exp):
         tlogger.log('********** Iteration {} **********'.format(curr_task_id))
 
         # Pop off results for the current task
-        curr_task_results, eval_rets, eval_lens, worker_ids = [], [], [], []
+        curr_task_results, eval_rets, eval_lens, worker_ids, nov_vectors = [], [], [], []
         num_results_skipped, num_episodes_popped, num_timesteps_popped, ob_count_this_batch = 0, 0, 0, 0
         while num_episodes_popped < config.episodes_per_batch or num_timesteps_popped < config.timesteps_per_batch:
             # Wait for a result
@@ -136,28 +136,13 @@ def run_master(master_redis_cfg, log_dir, exp):
         # Assemble results + elite
         noise_inds_n = list(population[:num_elites])
         returns_n2 = list(population_score[:num_elites])
-        org_count = {}
-        org_nov = {}
         for r in curr_task_results:
             noise_inds_n.extend(r.noise_inds_n)
             returns_n2.extend(r.returns_n2)
 
-            for i in range(0, len(r.noise_inds_n)):
-                if org_count[r.noise_inds_n[i]] is not None:
-                    org_count[r.noise_inds_n[i]] = org_count[r.noise_inds_n[i]] + 1
-                else:
-                    org_count[r.noise_inds_n[i]] = 1
-
-                if org_nov[r.noise_inds_n[i]] is not None:
-                    org_nov[r.noise_inds_n[i]] = org_nov[r.noise_inds_n[i]] + r.nov_vectors[i]
-                else:
-                    org_count[r.noise_inds_n] = r.nov_vectors[i]
-
-        # Update novelty archive
-        for org_id, nov_vector in org_nov.items():
-            print(org_count[org_id])
-            average_nov = nov_vector / org_count[org_id]
-            master.add_to_novelty_archive(average_nov)
+            # Update novelty archive
+            for nov_vector in r.nov_vectors:
+                master.add_to_novelty_archive(nov_vector)
 
         noise_inds_n = np.array(noise_inds_n)
         returns_n2 = np.array(returns_n2)
