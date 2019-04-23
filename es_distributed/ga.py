@@ -139,16 +139,10 @@ def run_master(master_redis_cfg, log_dir, exp):
         for r in curr_task_results:
             noise_inds_n.extend(r.noise_inds_n)
 
-            if exp['algo_type'] == 'ns':
-                for nov_vector in r.nov_vectors:
-                    master.add_to_novelty_archive(nov_vector)
+            for nov_vector in r.nov_vectors:
+                master.add_to_novelty_archive(nov_vector)
 
-                for nov_vector in r.nov_vectors:
-                    archive = master.get_archive()
-                    nov_val = compute_novelty_vs_archive(archive, nov_vector, exp['novelty_search']['k'], True)
-                    returns_n2.extend([nov_val])
-            else:
-                returns_n2.extend(r.returns_n2)
+            returns_n2.extend(r.returns_n2)
         noise_inds_n = np.array(noise_inds_n)
         returns_n2 = np.array(returns_n2)
         lengths_n2 = np.array([r.lengths_n2 for r in curr_task_results])
@@ -238,8 +232,11 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
         if rs.rand() < config.eval_prob:
             # Evaluation: noiseless weights and noiseless actions
             policy.set_trainable_flat(task_data.params)
-            eval_rews, eval_length, _ = policy.rollout(env)  # eval rollouts don't obey task_data.timestep_limit
-            eval_return = eval_rews.sum()
+            eval_rews, eval_length, nov_vector = policy.rollout(env)  # eval rollouts don't obey task_data.timestep_limit
+            if env['algo_type'] == 'ns':
+                eval_return = compute_novelty_vs_archive(worker.get_archive(), nov_vector, exp['novelty_search']['k'], True)
+            else:
+                eval_return = eval_rews.sum()
             logger.info('Eval result: task={} return={:.3f} length={}'.format(task_id, eval_return, eval_length))
             worker.push_result(task_id, Result(
                 worker_id=worker_id,
@@ -280,8 +277,13 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                 noise_inds.append(seeds)
 
                 nov_vectors.append(rollout_nov)
-                returns.append(rews_pos.sum())
-                signreturns.append(np.sign(rews_pos).sum())
+                if env['algo_type'] == 'ns':
+                    nov_val = compute_novelty_vs_archive(worker.get_archive(), nov_vector, exp['novelty_search']['k'], True)
+                    returns.append(nov_val)
+                    signreturns.append(-nov_val)
+                else:
+                    returns.append(rews_pos.sum())
+                    signreturns.append(np.sign(rews_pos).sum())
                 lengths.append(len_pos)
 
             worker.push_result(task_id, Result(
