@@ -32,7 +32,6 @@ def compute_novelty_vs_archive(archive, novelty_vector, k, normalize = False):
     if top_k.size != 0:
         return top_k.mean()
     else:
-        print(archive)
         return 0
 
 def get_mean_bc(env, policy, tslimit, num_rollouts=1):
