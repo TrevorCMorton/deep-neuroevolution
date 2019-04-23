@@ -40,18 +40,20 @@ def main(env_id, policy_file, record, stochastic, extra_kwargs):
             pi = MujocoPolicy.Load(policy_file, extra_kwargs=extra_kwargs)
 
         last_nov = None
+        max_vector = None
         while True:
             if is_atari_policy:
                 rews, t, novelty_vector = pi.rollout(env, render=True, random_stream=np.random if stochastic else None)
                 print(novelty_vector)
                 if last_nov is not None:
-                    max_vector = np.zeros(novelty_vector.shape)
 
                     max_vector = np.maximum(last_nov.astype(np.float), max_vector)
 
                     max_vector += max_vector == 0
 
                     print(ns.euclidean_distance(last_nov.astype(np.float) / max_vector, novelty_vector / max_vector))
+                else:
+                    max_vector = np.zeros(novelty_vector.shape)
                 last_nov = novelty_vector
             print('return={:.4f} len={}'.format(rews.sum(), t))
 

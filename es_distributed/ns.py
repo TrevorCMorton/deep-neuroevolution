@@ -16,8 +16,10 @@ def compute_novelty_vs_archive(archive, novelty_vector, k, normalize = False):
 
     max_vector = np.zeros(novelty_vector.shape)
 
+    print(novelty_vector)
     if normalize:
         for point in archive:
+            print(point)
             max_vector = np.maximum(point.astype(np.float), max_vector)
 
     max_vector += max_vector == 0
