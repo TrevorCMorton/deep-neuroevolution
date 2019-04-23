@@ -10,6 +10,7 @@
     "return_proc_mode": "centered_rank",
     "episode_cutoff_mode": 5000
   },
+  "algo_type": "ns",
   "population_size": 10,
   "num_elites": 1,
   "env_id": "TimePilotNoFrameskip-v4",
