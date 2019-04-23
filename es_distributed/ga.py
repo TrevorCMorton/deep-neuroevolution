@@ -124,10 +124,6 @@ def run_master(master_redis_cfg, log_dir, exp):
                     if policy.needs_ob_stat and result.ob_count > 0:
                         ob_stat.increment(result.ob_sum, result.ob_sumsq, result.ob_count)
                         ob_count_this_batch += result.ob_count
-
-                    # Update novelty archive
-                    for nov_vector in result.nov_vectors:
-                        master.add_to_novelty_archive(nov_vector)
                 else:
                     num_results_skipped += 1
 
@@ -140,9 +136,29 @@ def run_master(master_redis_cfg, log_dir, exp):
         # Assemble results + elite
         noise_inds_n = list(population[:num_elites])
         returns_n2 = list(population_score[:num_elites])
+        org_count = {}
+        org_nov = {}
         for r in curr_task_results:
             noise_inds_n.extend(r.noise_inds_n)
             returns_n2.extend(r.returns_n2)
+
+            for i in range(0, len(r.noise_inds_n)):
+                if org_count[r.noise_inds_n[i]] is not None:
+                    org_count[r.noise_inds_n[i]] = org_count[r.noise_inds_n[i]] + 1
+                else:
+                    org_count[r.noise_inds_n[i]] = 1
+
+                if org_nov[r.noise_inds_n[i]] is not None:
+                    org_nov[r.noise_inds_n[i]] = org_nov[r.noise_inds_n[i]] + r.nov_vectors[i]
+                else:
+                    org_count[r.noise_inds_n] = r.nov_vectors[i]
+
+        # Update novelty archive
+        for org_id, nov_vector in org_nov.items():
+            print(org_count[org_id])
+            average_nov = nov_vector / org_count[org_id]
+            master.add_to_novelty_archive(average_nov)
+
         noise_inds_n = np.array(noise_inds_n)
         returns_n2 = np.array(returns_n2)
         lengths_n2 = np.array([r.lengths_n2 for r in curr_task_results])
