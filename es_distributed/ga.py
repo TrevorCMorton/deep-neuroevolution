@@ -146,7 +146,6 @@ def run_master(master_redis_cfg, log_dir, exp):
                 for nov_vector in r.nov_vectors:
                     archive = master.get_archive()
                     nov_val = compute_novelty_vs_archive(archive, nov_vector, exp['novelty_search']['k'], True)
-                    print(nov_vector, nov_val)
                     returns_n2.extend([nov_val])
             else:
                 returns_n2.extend(r.returns_n2)
