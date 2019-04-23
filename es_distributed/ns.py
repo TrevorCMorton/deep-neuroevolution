@@ -29,9 +29,10 @@ def compute_novelty_vs_archive(archive, novelty_vector, k, normalize = False):
     distances = np.array(distances)
     top_k_indicies = (distances).argsort()[:k]
     top_k = distances[top_k_indicies]
-    if top_k.shape[0] >= k:
+    if top_k.size != 0:
         return top_k.mean()
     else:
+        print(archive)
         return 0
 
 def get_mean_bc(env, policy, tslimit, num_rollouts=1):
