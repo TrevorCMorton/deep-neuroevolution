@@ -214,7 +214,7 @@ def run_master(master_redis_cfg, log_dir, exp):
 def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2):
     logger.info('run_worker: {}'.format(locals()))
     assert isinstance(noise, SharedNoiseTable)
-    worker = WorkerClient(master_redis_cfg, relay_redis_cfg)
+    worker = WorkerClient(relay_redis_cfg, master_redis_cfg)
     exp = worker.get_experiment()
     config, env, sess, policy = setup(exp, single_threaded=True)
     rs = np.random.RandomState()
