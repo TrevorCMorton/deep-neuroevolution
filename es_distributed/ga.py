@@ -233,7 +233,7 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
             # Evaluation: noiseless weights and noiseless actions
             policy.set_trainable_flat(task_data.params)
             eval_rews, eval_length, nov_vector = policy.rollout(env)  # eval rollouts don't obey task_data.timestep_limit
-            if env['algo_type'] == 'ns':
+            if exp['algo_type'] == 'ns':
                 eval_return = compute_novelty_vs_archive(worker.get_archive(), nov_vector, exp['novelty_search']['k'], True)
             else:
                 eval_return = eval_rews.sum()
@@ -277,8 +277,8 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                 noise_inds.append(seeds)
 
                 nov_vectors.append(rollout_nov)
-                if env['algo_type'] == 'ns':
-                    nov_val = compute_novelty_vs_archive(worker.get_archive(), nov_vector, exp['novelty_search']['k'], True)
+                if exp['algo_type'] == 'ns':
+                    nov_val = compute_novelty_vs_archive(worker.get_archive(), rollout_nov, exp['novelty_search']['k'], True)
                     returns.append(nov_val)
                     signreturns.append(-nov_val)
                 else:
