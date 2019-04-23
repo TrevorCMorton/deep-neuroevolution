@@ -15,7 +15,7 @@
     "k": 10
   },
   "population_size": 10,
-  "num_elites": 1,
+  "num_elites": 0,
   "env_id": "TimePilotNoFrameskip-v4",
   "policy": {
     "args" : {
