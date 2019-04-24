@@ -490,8 +490,8 @@ class GAAtariPolicy(Policy):
             if random_stream:
                 random_stream.seed(policy_seed)
 
-        actions_chosen = np.zeros((env.action_space.n,))
-        repetitions = np.zeros((env.action_space.n,))
+        actions_chosen = np.zeros((env[0].action_space.n,))
+        repetitions = np.zeros((env[0].action_space.n,))
 
         for i in range(len(env)):
             prev_action = None
