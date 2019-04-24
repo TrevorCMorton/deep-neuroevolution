@@ -84,7 +84,7 @@ def run_master(master_redis_cfg, log_dir, exp):
 
         if policy.needs_ob_stat:
             ob_stat = RunningStat(
-                env.observation_space.shape,
+                env[0].observation_space.shape,
                 eps=1e-2  # eps to prevent dividing by zero at the beginning when computing mean/stdev
             )
 
@@ -267,7 +267,7 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
         else:
             # Rollouts with noise
             noise_inds, returns, signreturns, lengths, nov_vectors = [], [], [], [], []
-            task_ob_stat = RunningStat(env.observation_space.shape, eps=0.)  # eps=0 because we're incrementing only
+            task_ob_stat = RunningStat(env[0].observation_space.shape, eps=0.)  # eps=0 because we're incrementing only
 
             while not noise_inds or time.time() - task_tstart < min_task_runtime:
                 if len(task_data.population) > 0:
