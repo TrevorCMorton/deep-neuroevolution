@@ -13,7 +13,7 @@
   "algo_type": "ga",
   "population_size": 10,
   "num_elites": 1,
-  "env_id": ["DemonAttackNoFrameskip-v4", "CarnivalNoFrameskip-v4", "SpaceInvadersNoFrameskip-v4"]
+  "env_id": ["DemonAttackNoFrameskip-v4", "CarnivalNoFrameskip-v4", "SpaceInvadersNoFrameskip-v4"],
   "policy": {
     "args" : {
       "nonlin_type": "relu"
