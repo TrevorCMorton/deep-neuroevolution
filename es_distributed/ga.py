@@ -12,10 +12,9 @@ def setup(exp, single_threaded):
 
     config = Config(**exp['config'])
 
-    print(type(exp['env_id']))
-    
+
     while True:
-        print()
+        print(type(exp['env_id']))
 
     if exp['env_id'] is list:
         env = []
