@@ -209,7 +209,7 @@ def run_master(master_redis_cfg, log_dir, exp):
         tlogger.record_tabular("TimeElapsed", step_tend - tstart)
         tlogger.dump_tabular()
 
-        bc_mean = get_mean_bc(env, policy, config.timesteps_per_batch, 10)
+        bc_mean = get_mean_bc(env, policy, config.timesteps_per_batch, 1)
         master.add_to_novelty_archive(bc_mean)
 
         # if config.snapshot_freq != 0 and curr_task_id % config.snapshot_freq == 0:
