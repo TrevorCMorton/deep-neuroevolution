@@ -12,6 +12,11 @@ def setup(exp, single_threaded):
 
     config = Config(**exp['config'])
 
+    print(type(exp['env_id']))
+    
+    while True:
+        print()
+
     if exp['env_id'] is list:
         env = []
         for i in range(0, len(exp['env_id'])):
