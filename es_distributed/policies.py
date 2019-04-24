@@ -490,29 +490,30 @@ class GAAtariPolicy(Policy):
             if random_stream:
                 random_stream.seed(policy_seed)
 
-        ob = env.reset()
-
         actions_chosen = np.zeros((env.action_space.n,))
         repetitions = np.zeros((env.action_space.n,))
-        prev_action = None
-        for _ in range(timestep_limit):
-            ac = self.act(ob[None], random_stream=random_stream)[0]
-            actions_chosen[ac] += 1
 
-            if ac != prev_action:
-                repetitions[ac] += 1
-                prev_action = ac
+        for i in range(len(env)):
+            prev_action = None
+            ob = env[i].reset()
+            for _ in range(timestep_limit):
+                ac = self.act(ob[None], random_stream=random_stream)[0]
+                actions_chosen[ac] += 1
 
-            if save_obs:
-                obs.append(ob)
-            ob, rew, done, info = env.step(ac)
-            rews.append(rew)
+                if ac != prev_action:
+                    repetitions[ac] += 1
+                    prev_action = ac
 
-            t += 1
-            if render:
-                env.render(mode='human')
-            if done:
-                break
+                if save_obs:
+                    obs.append(ob)
+                ob, rew, done, info = env[i].step(ac)
+                rews.append(rew)
+
+                t += 1
+                if render:
+                    env[i].render(mode='human')
+                if done:
+                    break
 
         # Copy over final positions to the max timesteps
         rews = np.array(rews, dtype=np.float32)

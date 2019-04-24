@@ -21,11 +21,11 @@ def main(env_id, policy_file, record, stochastic, extra_kwargs):
 
     env = gym.make(env_id)
     if is_atari_policy:
-        env = wrap_deepmind(env)
+        env = [wrap_deepmind(env)]
 
     if record:
         import uuid
-        env = wrappers.Monitor(env, '/tmp/' + str(uuid.uuid4()), force=True)
+        env = [wrappers.Monitor(env[0], '/tmp/' + str(uuid.uuid4()), force=True)]
 
     if extra_kwargs:
         import json

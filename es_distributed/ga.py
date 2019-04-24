@@ -11,12 +11,21 @@ def setup(exp, single_threaded):
     from . import policies, tf_util
 
     config = Config(**exp['config'])
-    env = gym.make(exp['env_id'])
-    if exp['env_id'].endswith('NoFrameskip-v4'):
-        from .atari_wrappers import wrap_deepmind
-        env = wrap_deepmind(env)
+
+    if exp['env_id'] is list:
+        env = []
+        for i in range(0, len(exp['env_id'])):
+            env.append(gym.make(exp['env_id'][i]))
+            if exp['env_id'][i].endswith('NoFrameskip-v4'):
+                from .atari_wrappers import wrap_deepmind
+                env[i] = wrap_deepmind(env[i])
+    else:
+        env = [gym.make(exp['env_id'])]
+        if exp['env_id'][0].endswith('NoFrameskip-v4'):
+            from .atari_wrappers import wrap_deepmind
+            env[0] = wrap_deepmind(env[0])
     sess = make_session(single_threaded=single_threaded)
-    policy = getattr(policies, exp['policy']['type'])(env.observation_space, env.action_space, **exp['policy']['args'])
+    policy = getattr(policies, exp['policy']['type'])(env[0].observation_space, env[0].action_space, **exp['policy']['args'])
     tf_util.initialize()
     return config, env, sess, policy
 
