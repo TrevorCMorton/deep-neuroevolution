@@ -2,12 +2,12 @@ import click
 
 
 @click.command()
-@click.argument('env_id')
+@click.argument('env_ids')
 @click.argument('policy_file')
 @click.option('--record', is_flag=True)
 @click.option('--stochastic', is_flag=True)
 @click.option('--extra_kwargs')
-def main(env_id, policy_file, record, stochastic, extra_kwargs):
+def main(env_ids, policy_file, record, stochastic, extra_kwargs):
     import gym
     from gym import wrappers
     import tensorflow as tf
@@ -17,15 +17,15 @@ def main(env_id, policy_file, record, stochastic, extra_kwargs):
     import es_distributed.ns as ns
     import numpy as np
 
-    is_atari_policy = "NoFrameskip" in env_id
+    env_ids = env_ids.split(' ')
 
-    env = gym.make(env_id)
-    if is_atari_policy:
-        env = [wrap_deepmind(env)]
+    is_atari_policy = "NoFrameskip" in env_ids[0]
 
-    if record:
-        import uuid
-        env = [wrappers.Monitor(env[0], '/tmp/' + str(uuid.uuid4()), force=True)]
+    env = []
+    for i in range(0, len(env_ids)):
+        env.append(gym.make(env_ids[i]))
+        if env_ids[i].endswith('NoFrameskip-v4'):
+            env[i] = wrap_deepmind(env[i])
 
     if extra_kwargs:
         import json
@@ -35,7 +35,7 @@ def main(env_id, policy_file, record, stochastic, extra_kwargs):
         if is_atari_policy:
             pi = GAAtariPolicy.Load(policy_file, extra_kwargs=extra_kwargs)
             if pi.needs_ref_batch:
-                pi.set_ref_batch(get_ref_batch(env, batch_size=128))
+                pi.set_ref_batch(get_ref_batch(env[0], batch_size=128))
         else:
             pi = MujocoPolicy.Load(policy_file, extra_kwargs=extra_kwargs)
 
@@ -56,10 +56,6 @@ def main(env_id, policy_file, record, stochastic, extra_kwargs):
                     max_vector = np.zeros(novelty_vector.shape)
                 last_nov = novelty_vector
             print('return={:.4f} len={}'.format(rews.sum(), t))
-
-            if record:
-                env.close()
-                return
 
 
 if __name__ == '__main__':

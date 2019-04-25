@@ -1,8 +1,8 @@
 {
   "config": {
     "calc_obstat_prob": 0.0,
-    "episodes_per_batch": 500,
-    "eval_prob": 0.01,
+    "episodes_per_batch": 1000,
+    "eval_prob": 0.001,
     "l2coeff": 0.005,
     "noise_stdev": 0.01,
     "snapshot_freq": 20,
@@ -11,9 +11,9 @@
     "episode_cutoff_mode": 5000
   },
   "algo_type": "ga",
-  "population_size": 20,
-  "num_elites": 3,
-  "env_id": ["DemonAttackNoFrameskip-v4", "CarnivalNoFrameskip-v4", "SpaceInvadersNoFrameskip-v4"],
+  "population_size": 10,
+  "num_elites": 1,
+  "env_id": ["DemonAttackNoFrameskip-v4", "SpaceInvadersNoFrameskip-v4"],
   "policy": {
     "args" : {
       "nonlin_type": "relu"
