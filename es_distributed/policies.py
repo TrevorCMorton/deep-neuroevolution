@@ -482,6 +482,7 @@ class GAAtariPolicy(Policy):
         t = 0
 
         obs = []
+        actions = []
 
         if policy_seed:
             env.seed(policy_seed)
@@ -504,6 +505,7 @@ class GAAtariPolicy(Policy):
                     prev_action = ac
 
                 obs.append(ob)
+                actions.append(ac)
                 ob, rew, done, info = env[i].step(ac)
                 rews.append(rew)
 
@@ -519,7 +521,7 @@ class GAAtariPolicy(Policy):
         repetitions += repetitions == 0
         #novelty_vector = env.unwrapped._get_ram() # extracts RAM state information
         #novelty_vector = [actions_chosen / t, actions_chosen / repetitions, [rews.sum() / t], [rews.sum()], [float(t == timestep_limit)]]
-        novelty_vector = obs
+        novelty_vector = actions
         if save_obs:
             return rews, t, np.array(obs), np.concatenate(novelty_vector)
         return rews, t, np.concatenate(novelty_vector)
