@@ -16,7 +16,7 @@
   },
   "population_size": 10,
   "num_elites": 0,
-  "env_id": "TimePilotNoFrameskip-v4",
+  "env_id": ["TimePilotNoFrameskip-v4"],
   "policy": {
     "args" : {
       "nonlin_type": "relu"
