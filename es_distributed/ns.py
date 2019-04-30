@@ -49,7 +49,7 @@ def levenshtein_distance(x, y):
     for j in range(1, n):
         for i in range(1, m):
             substCost = 0
-            if x[i - 1] == y[j-1]:
+            if x[j - 1] == y[i-1]:
                 substCost = 0
             else:
                 substCost = 1
