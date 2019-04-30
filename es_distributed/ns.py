@@ -60,10 +60,9 @@ def levenshtein_distance(x, y):
 
 def compute_novelty_vs_archive_levenshtein(archive, novelty_vector, k):
     distances = []
-    nov = novelty_vector.astype(np.char)
 
     for point in archive:
-        distances.append(levenshtein_distance(point.astype(np.char), nov))
+        distances.append(levenshtein_distance(point, novelty_vector))
 
     # Pick k nearest neighbors
     distances = np.array(distances)
