@@ -55,7 +55,7 @@ def levenshtein_distance(x, y):
                 substCost = 1
             a[i,j] = min(a[i-1, j] + 1, a[i, j-1] + 1, a[i-1,j-1] + substCost)
 
-    return a[m, n]
+    return a[m - 1, n - 1]
 
 
 def compute_novelty_vs_archive_levenshtein(archive, novelty_vector, k):
