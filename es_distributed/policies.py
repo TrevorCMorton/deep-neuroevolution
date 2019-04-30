@@ -481,8 +481,7 @@ class GAAtariPolicy(Policy):
         rollout_details = {}
         t = 0
 
-        if save_obs:
-            obs = []
+        obs = []
 
         if policy_seed:
             env.seed(policy_seed)
@@ -504,8 +503,7 @@ class GAAtariPolicy(Policy):
                     repetitions[ac] += 1
                     prev_action = ac
 
-                if save_obs:
-                    obs.append(ob)
+                obs.append(ob)
                 ob, rew, done, info = env[i].step(ac)
                 rews.append(rew)
 
@@ -520,8 +518,23 @@ class GAAtariPolicy(Policy):
 
         repetitions += repetitions == 0
         #novelty_vector = env.unwrapped._get_ram() # extracts RAM state information
-        novelty_vector = [actions_chosen / t, actions_chosen / repetitions, [rews.sum() / t], [rews.sum()], [float(t == timestep_limit)]]
+        #novelty_vector = [actions_chosen / t, actions_chosen / repetitions, [rews.sum() / t], [rews.sum()], [float(t == timestep_limit)]]
+        novelty_vector = obs
         if save_obs:
             return rews, t, np.array(obs), np.concatenate(novelty_vector)
         return rews, t, np.concatenate(novelty_vector)
+
+
+class GARecurrentAtariPolicy(GAAtariPolicy):
+    def _make_net(self, o):
+        x = o
+        x = self.nonlin(U.conv(x, name='conv1', num_outputs=16, kernel_size=8, stride=4, std=1.0))
+        x = self.nonlin(U.conv(x, name='conv2', num_outputs=32, kernel_size=4, stride=2, std=1.0))
+
+        x = U.flattenallbut0(x)
+        x = self.nonlin(U.dense(x, 256, 'fc', U.normc_initializer(1.0), std=1.0))
+
+        a = U.dense(x, self.num_actions, 'out', U.normc_initializer(self.ac_init_std), std=self.ac_init_std)
+
+        return tf.argmax(a,1)
 

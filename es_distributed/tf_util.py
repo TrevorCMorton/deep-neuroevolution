@@ -146,6 +146,23 @@ def conv(x, kernel_size, num_outputs, name, stride=1, padding="SAME", bias=True,
     else:
         return ret
 
+
+def deconv(x, kernel_size, num_outputs, name, stride=1, padding="SAME", bias=True, std=1.0):
+    assert len(x.get_shape()) == 4
+    w = tf.get_variable(name + "/w", [kernel_size, kernel_size, x.get_shape()[-1], num_outputs], initializer=normc_initializer(std))
+
+    w.reinitialize = _normalize(w, std=std)
+
+    ret = tf.nn.conv2d_transpose(x, w, [1, stride, stride, 1], padding=padding)
+    if bias:
+        b = tf.get_variable(name + "/b", [1, 1, 1, num_outputs], initializer=tf.zeros_initializer)
+
+        b.reinitialize = b.assign(tf.zeros_like(b))
+        #b = tf.Print(b, [b, w], name + 'last_bias,w=' )
+        return ret + b
+    else:
+        return ret
+
 def dense(x, size, name, weight_init=None, bias=True, std=1.0):
     w = tf.get_variable(name + "/w", [x.get_shape()[1], size], initializer=weight_init)
 

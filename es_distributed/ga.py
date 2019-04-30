@@ -242,6 +242,8 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
             eval_rews, eval_length, nov_vector = policy.rollout(env)  # eval rollouts don't obey task_data.timestep_limit
             if exp['algo_type'] == 'ns':
                 eval_return = compute_novelty_vs_archive(worker.get_archive(), nov_vector, exp['novelty_search']['k'], True)
+            elif exp['algo_type'] == 'ans':
+                eval_return = compute_novelty_vs_archive_levenshtein(worker.get_archive(), nov_vector, exp['novelty_search']['k'])
             else:
                 eval_return = eval_rews.sum()
             logger.info('Eval result: task={} return={:.3f} length={}'.format(task_id, eval_return, eval_length))
@@ -284,13 +286,19 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                 noise_inds.append(seeds)
 
                 nov_vectors.append(rollout_nov)
+
                 if exp['algo_type'] == 'ns':
                     nov_val = compute_novelty_vs_archive(worker.get_archive(), rollout_nov, exp['novelty_search']['k'], True)
+                    returns.append(nov_val)
+                    signreturns.append(-nov_val)
+                elif exp['algo_type'] == 'ans':
+                    nov_val = compute_novelty_vs_archive_levenshtein(worker.get_archive(), rollout_nov, exp['novelty_search']['k'])
                     returns.append(nov_val)
                     signreturns.append(-nov_val)
                 else:
                     returns.append(rews_pos.sum())
                     signreturns.append(np.sign(rews_pos).sum())
+
                 lengths.append(len_pos)
 
             worker.push_result(task_id, Result(
