@@ -135,7 +135,7 @@ def run_master(master_redis_cfg, log_dir, exp):
                         writer = csv.writer(stats, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
                         for stat in result.organism_stats:
-                            writer.writerow(str(curr_task_id) + "," + stat)
+                            writer.writerow([curr_task_id].extend(stat))
                 else:
                     num_results_skipped += 1
 
@@ -301,16 +301,16 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                     nov_val = compute_novelty_vs_archive(worker.get_archive(), rollout_nov, exp['novelty_search']['k'], True)
                     returns.append(nov_val)
                     signreturns.append(-nov_val)
-                    org_stats.append(str(rews_pos.sum()) + "," + str(nov_val))
+                    org_stats.append([rews_pos.sum() , nov_val])
                 elif exp['algo_type'] == 'ans':
                     nov_val = compute_novelty_vs_archive_levenshtein(worker.get_archive(), rollout_nov, exp['novelty_search']['k'])
                     returns.append(nov_val)
                     signreturns.append(-nov_val)
-                    org_stats.append(str(rews_pos.sum()) + "," + str(nov_val))
+                    org_stats.append([rews_pos.sum() , nov_val])
                 else:
                     returns.append(rews_pos.sum())
                     signreturns.append(np.sign(rews_pos).sum())
-                    org_stats.append(str(rews_pos.sum()))
+                    org_stats.append([rews_pos.sum()])
 
                 lengths.append(len_pos)
 
