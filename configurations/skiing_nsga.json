@@ -1,0 +1,27 @@
+{
+  "config": {
+    "calc_obstat_prob": 0.0,
+    "episodes_per_batch": 100,
+    "eval_prob": 0.03,
+    "l2coeff": 0.005,
+    "noise_stdev": 0.02,
+    "snapshot_freq": 10,
+    "timesteps_per_batch": 1000,
+    "return_proc_mode": "centered_rank",
+    "episode_cutoff_mode": 5000
+  },
+  "algo_type": "ns",
+  "novelty_search": {
+    "k": 10
+  },
+  "population_size": 10,
+  "num_elites": 0,
+  "env_id": ["TimePilotNoFrameskip-v4"],
+  "policy": {
+    "args" : {
+      "nonlin_type": "relu"
+    },
+    "type": "GAAtariPolicy"
+  }
+}
+
