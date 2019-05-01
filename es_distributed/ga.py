@@ -135,7 +135,7 @@ def run_master(master_redis_cfg, log_dir, exp):
                         writer = csv.writer(stats, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
                         for stat in result.organism_stats:
-                            writer.writerow(curr_task_id + "," + stat)
+                            writer.writerow(str(curr_task_id) + "," + stat)
                 else:
                     num_results_skipped += 1
 
