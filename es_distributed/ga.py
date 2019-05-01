@@ -37,6 +37,7 @@ def rollout_and_update_ob_stat(policy, env, timestep_limit, rs, task_ob_stat, ca
 def run_master(master_redis_cfg, log_dir, exp):
     logger.info('run_master: {}'.format(locals()))
     from . import tabular_logger as tlogger
+    import csv
     logger.info('Tabular logging to {}'.format(log_dir))
     tlogger.start(log_dir)
     config, env, sess, policy = setup(exp, single_threaded=False)
@@ -70,6 +71,8 @@ def run_master(master_redis_cfg, log_dir, exp):
     population_size = exp['population_size']
     num_elites = exp['num_elites']
     population_score = np.array([])
+
+    stats_file = "data.csv"
 
     while True:
         step_tstart = time.time()
@@ -127,6 +130,12 @@ def run_master(master_redis_cfg, log_dir, exp):
                     if policy.needs_ob_stat and result.ob_count > 0:
                         ob_stat.increment(result.ob_sum, result.ob_sumsq, result.ob_count)
                         ob_count_this_batch += result.ob_count
+
+                    with open(stats_file, mode='a') as stats:
+                        writer = csv.writer(stats, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+                        for stat in result.organism_stats:
+                            writer.writerow(curr_task_id + "," + stat)
                 else:
                     num_results_skipped += 1
 
@@ -258,11 +267,12 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                 ob_sum=None,
                 ob_sumsq=None,
                 ob_count=None,
-                nov_vectors=None
+                nov_vectors=None,
+                organism_stats=None
             ))
         else:
             # Rollouts with noise
-            noise_inds, returns, signreturns, lengths, nov_vectors = [], [], [], [], []
+            noise_inds, returns, signreturns, lengths, nov_vectors, org_stats = [], [], [], [], [], []
             task_ob_stat = RunningStat(env[0].observation_space.shape, eps=0.)  # eps=0 because we're incrementing only
 
             while not noise_inds or time.time() - task_tstart < min_task_runtime:
@@ -291,13 +301,16 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                     nov_val = compute_novelty_vs_archive(worker.get_archive(), rollout_nov, exp['novelty_search']['k'], True)
                     returns.append(nov_val)
                     signreturns.append(-nov_val)
+                    org_stats.append(rews_pos.sum() + "," + nov_val)
                 elif exp['algo_type'] == 'ans':
                     nov_val = compute_novelty_vs_archive_levenshtein(worker.get_archive(), rollout_nov, exp['novelty_search']['k'])
                     returns.append(nov_val)
                     signreturns.append(-nov_val)
+                    org_stats.append(rews_pos.sum() + "," + nov_val)
                 else:
                     returns.append(rews_pos.sum())
                     signreturns.append(np.sign(rews_pos).sum())
+                    org_stats.append(rews_pos.sum())
 
                 lengths.append(len_pos)
 
@@ -312,5 +325,6 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                 ob_sum=None if task_ob_stat.count == 0 else task_ob_stat.sum,
                 ob_sumsq=None if task_ob_stat.count == 0 else task_ob_stat.sumsq,
                 ob_count=task_ob_stat.count,
-                nov_vectors=nov_vectors
+                nov_vectors=nov_vectors,
+                organism_stats=org_stats
             ))
