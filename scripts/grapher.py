@@ -1,7 +1,7 @@
 import csv
 import numpy as np
 
-input_file = "ramNov.csv"
+input_file = "compositeNov.csv"
 
 generations_rew = {}
 generations_nov = {}

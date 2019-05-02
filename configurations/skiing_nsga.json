@@ -10,7 +10,7 @@
     "return_proc_mode": "centered_rank",
     "episode_cutoff_mode": 5000
   },
-  "algo_type": "ns",
+  "algo_type": "ans",
   "novelty_search": {
     "k": 10
   },
