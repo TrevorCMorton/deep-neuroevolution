@@ -156,7 +156,11 @@ def run_master(master_redis_cfg, log_dir, exp):
 
             # Update novelty archive
             for nov_vector in r.nov_vectors:
-                master.add_to_novelty_archive(nov_vector)
+                if exp['algo_type'] == 'arns':
+                    for nov_vec in nov_vector:
+                        master.add_to_novelty_archive(nov_vector)
+                else:
+                    master.add_to_novelty_archive(nov_vector)
 
         noise_inds_n = np.array(noise_inds_n)
         returns_n2 = np.array(returns_n2)
@@ -306,6 +310,13 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                     org_stats.append([rews_pos.sum(), nov_val])
                 elif exp['algo_type'] == 'ans':
                     nov_val = compute_novelty_vs_archive_levenshtein(worker.get_archive(), rollout_nov, exp['novelty_search']['k'])
+                    returns.append(nov_val)
+                    signreturns.append(-nov_val)
+                    org_stats.append([rews_pos.sum(), nov_val])
+                elif exp['algo_type'] == 'arns':
+                    nov_val = 0
+                    for nov_vec in rollout_nov:
+                        nov_val += compute_novelty_vs_archive(worker.get_archive(), nov_vec, exp['novelty_search']['k'], True)
                     returns.append(nov_val)
                     signreturns.append(-nov_val)
                     org_stats.append([rews_pos.sum(), nov_val])
