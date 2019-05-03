@@ -158,7 +158,7 @@ def run_master(master_redis_cfg, log_dir, exp):
             for nov_vector in r.nov_vectors:
                 if exp['algo_type'] == 'arns':
                     for nov_vec in nov_vector:
-                        master.add_to_novelty_archive(nov_vector)
+                        master.add_to_novelty_archive(nov_vec)
                 else:
                     master.add_to_novelty_archive(nov_vector)
 
@@ -255,7 +255,7 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
             # Evaluation: noiseless weights and noiseless actions
             policy.set_trainable_flat(task_data.params)
             eval_rews, eval_length, nov_vector = policy.rollout(env)  # eval rollouts don't obey task_data.timestep_limit
-            if exp['algo_type'] == 'ns':
+            if exp['algo_type'] == 'ns' or exp['algo_type'] == 'arns':
                 eval_return = compute_novelty_vs_archive(worker.get_archive(), nov_vector, exp['novelty_search']['k'], True)
             elif exp['algo_type'] == 'ans':
                 eval_return = compute_novelty_vs_archive_levenshtein(worker.get_archive(), nov_vector, exp['novelty_search']['k'])
