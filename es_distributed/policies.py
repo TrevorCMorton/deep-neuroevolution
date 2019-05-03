@@ -509,7 +509,7 @@ class GAAtariPolicy(Policy):
                 ob, rew, done, info = env[i].step(ac)
                 rews.append(rew)
                 for en in env:
-                    novelty_vector.append(en.unwrapped._get_ram()) # extracts RAM state information
+                    novelty_vector.append(np.array(en.unwrapped._get_ram())) # extracts RAM state information
 
                 t += 1
                 if render:
