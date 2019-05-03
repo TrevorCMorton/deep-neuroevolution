@@ -73,6 +73,10 @@ def compute_novelty_vs_archive_levenshtein(archive, novelty_vector, k):
     else:
         return 0
 
+def get_policy_novelty(env, policy, tslimit):
+    rew, t, nv = policy.rollout(env, timestep_limit=tslimit)
+    return nv
+
 
 def get_mean_bc(env, policy, tslimit, num_rollouts=1):
     novelty_vector = []
