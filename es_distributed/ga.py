@@ -219,7 +219,11 @@ def run_master(master_redis_cfg, log_dir, exp):
         tlogger.dump_tabular()
 
         nov = get_policy_novelty(env, policy, config.timesteps_per_batch)
-        master.add_to_novelty_archive(nov)
+        if exp['algo_type'] == 'arns':
+            for nov_vec in nov:
+                master.add_to_novelty_archive(nov_vec)
+        else:
+            master.add_to_novelty_archive(nov)
 
         # if config.snapshot_freq != 0 and curr_task_id % config.snapshot_freq == 0:
         if config.snapshot_freq != 0:
