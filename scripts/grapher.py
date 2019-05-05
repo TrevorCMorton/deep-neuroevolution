@@ -1,7 +1,7 @@
 import csv
 import numpy as np
 
-input_file = "levenNov.csv"
+input_file = "conrNov.csv"
 
 generations_rew = {}
 generations_nov = {}
@@ -43,8 +43,8 @@ import matplotlib.pyplot as plt
 
 plt.plot(range(0, len(generations_nov)), average_rewards, label='average reward')
 plt.plot(range(0, len(generations_nov)), max_rewards, label='max reward')
-plt.plot(range(0, len(generations_nov)), average_novelties, label='average novelty')
-plt.plot(range(0, len(generations_nov)), max_novelties, label='max novelty')
+#plt.plot(range(0, len(generations_nov)), average_novelties, label='average novelty')
+#plt.plot(range(0, len(generations_nov)), max_novelties, label='max novelty')
 
 plt.legend()
 plt.xlabel('generations')

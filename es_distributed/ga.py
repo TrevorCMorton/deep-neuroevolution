@@ -2,7 +2,7 @@ from .es import *
 from .ns import *
 
 
-GATask = namedtuple('GATask', ['params', 'population', 'ob_mean', 'ob_std', 'timestep_limit'])
+GATask = namedtuple('GATask', ['params', 'population', 'ob_mean', 'ob_std', 'timestep_limit', 'rew_max', 'nov_max'])
 
 
 def setup(exp, single_threaded):
@@ -71,6 +71,8 @@ def run_master(master_redis_cfg, log_dir, exp):
     population_size = exp['population_size']
     num_elites = exp['num_elites']
     population_score = np.array([])
+    rew_max = 1
+    nov_max = 1
 
     stats_file = "data.csv"
 
@@ -90,7 +92,9 @@ def run_master(master_redis_cfg, log_dir, exp):
             population=population,
             ob_mean=ob_stat.mean if policy.needs_ob_stat else None,
             ob_std=ob_stat.std if policy.needs_ob_stat else None,
-            timestep_limit=tslimit
+            timestep_limit=tslimit,
+            rew_max=rew_max,
+            nov_max=nov_max
         ))
 
         tlogger.log('********** Iteration {} **********'.format(curr_task_id))
@@ -138,6 +142,11 @@ def run_master(master_redis_cfg, log_dir, exp):
                             row = [curr_task_id]
                             row.extend(stat)
                             writer.writerow(row)
+
+                            if exp['algo_type'] != 'ga':
+                                rew_max = max(stat[0], rew_max)
+                                nov_max = max(stat[1], nov_max)
+
                 else:
                     num_results_skipped += 1
 
@@ -328,10 +337,17 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                     archive = worker.get_archive()
                     for nov_vec in rollout_nov:
                         nov_val += compute_novelty_vs_archive(archive, nov_vec, exp['novelty_search']['k'], True)
+
                     returns.append(nov_val)
                     signreturns.append(-nov_val)
                     org_stats.append([rews_pos.sum(), nov_val])
-                else:
+                elif exp['algo_type'] == 'nsr':
+                    nov_val = compute_novelty_vs_archive(worker.get_archive(), rollout_nov, exp['novelty_search']['k'], True)
+                    hybrid_return = (rews_pos.sum() / task_data.rew_max + nov_val / task_data.nov_max) / 2
+                    returns.append(hybrid_return)
+                    signreturns.append(-hybrid_return)
+                    org_stats.append([rews_pos.sum(), nov_val])
+                elif exp['algo_type'] == 'ga':
                     returns.append(rews_pos.sum())
                     signreturns.append(np.sign(rews_pos).sum())
                     org_stats.append([rews_pos.sum()])
