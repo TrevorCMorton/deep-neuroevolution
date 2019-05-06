@@ -521,10 +521,10 @@ class GAAtariPolicy(Policy):
         rews = np.array(rews, dtype=np.float32)
 
         repetitions += repetitions == 0
-        for en in env:
-            novelty_vector.append(np.array(en.unwrapped._get_ram())) # extracts RAM state information
-        novelty_vector = np.concatenate(novelty_vector)
-        # novelty_vector = np.concatenate([actions_chosen / t, actions_chosen / repetitions, [rews.sum() / t], [rews.sum()], [float(t == timestep_limit)]])
+        #for en in env:
+        #    novelty_vector.append(np.array(en.unwrapped._get_ram())) # extracts RAM state information
+        #novelty_vector = np.concatenate(novelty_vector)
+        novelty_vector = np.concatenate([actions_chosen / t, actions_chosen / repetitions, [rews.sum() / t], [rews.sum()], [float(t == timestep_limit)]])
         #novelty_vector = actions
         if save_obs:
             return rews, t, np.array(obs), novelty_vector

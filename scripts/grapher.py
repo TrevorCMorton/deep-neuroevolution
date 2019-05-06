@@ -1,7 +1,7 @@
 import csv
 import numpy as np
 
-input_file = "ramnsr.csv"
+input_file = "ramnsrall.csv"
 
 generations_rew = {}
 generations_nov = {}
