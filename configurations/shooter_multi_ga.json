@@ -11,6 +11,9 @@
     "episode_cutoff_mode": 5000
   },
   "algo_type": "nsr",
+  "novelty_search": {
+    "k": 10
+  },
   "population_size": 10,
   "num_elites": 1,
   "env_id": ["DemonAttackNoFrameskip-v4", "SpaceInvadersNoFrameskip-v4"],
