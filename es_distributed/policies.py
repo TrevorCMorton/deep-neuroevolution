@@ -477,7 +477,7 @@ class GAAtariPolicy(Policy):
         """
         env_timestep_limit = env[0].spec.tags.get('wrapper_config.TimeLimit.max_episode_steps')
         timestep_limit = env_timestep_limit if timestep_limit is None else min(timestep_limit, env_timestep_limit)
-        rews = []; novelty_vector = []
+        rews = []; novelty_vectors = []
         rollout_details = {}
         t = 0
 
@@ -490,14 +490,22 @@ class GAAtariPolicy(Policy):
             if random_stream:
                 random_stream.seed(policy_seed)
 
-        actions_chosen = np.zeros((env[0].action_space.n,))
-        repetitions = np.zeros((env[0].action_space.n,))
+        max_actions = 0
+        for i in range(0, len(env)):
+            max_actions = max(max_actions, env[i].action_space.n)
 
         for i in range(len(env)):
+            actions_chosen = np.zeros((max_actions,))
+            repetitions = np.zeros((max_actions,))
+            reward = 0
             prev_action = None
             ob = env[i].reset()
-            for _ in range(timestep_limit):
+            for j in range(timestep_limit):
                 ac = self.act(ob[None], random_stream=random_stream)[0]
+
+                if ac >= max_actions:
+                    ac = 0
+
                 actions_chosen[ac] += 1
 
                 if ac != prev_action:
@@ -508,8 +516,8 @@ class GAAtariPolicy(Policy):
                 actions.append(ac)
                 ob, rew, done, info = env[i].step(ac)
                 rews.append(rew)
-                # for en in env:
-                #     novelty_vector.append(np.array(en.unwrapped._get_ram())) # extracts RAM state information
+                reward += rew
+                # novelty_vectors.append(np.array(env[i].unwrapped._get_ram())) # extracts RAM state information
 
                 t += 1
                 if render:
@@ -517,18 +525,19 @@ class GAAtariPolicy(Policy):
                 if done:
                     break
 
+            repetitions += repetitions == 0
+            novelty_vectors.append(np.concatenate([actions_chosen / j, actions_chosen / repetitions, [reward / j], [reward]]))
+
         # Copy over final positions to the max timesteps
         rews = np.array(rews, dtype=np.float32)
 
-        repetitions += repetitions == 0
         #for en in env:
         #    novelty_vector.append(np.array(en.unwrapped._get_ram())) # extracts RAM state information
         #novelty_vector = np.concatenate(novelty_vector)
-        novelty_vector = np.concatenate([actions_chosen / t, actions_chosen / repetitions, [rews.sum() / t], [rews.sum()], [float(t == timestep_limit)]])
         #novelty_vector = actions
         if save_obs:
-            return rews, t, np.array(obs), novelty_vector
-        return rews, t, novelty_vector
+            return rews, t, np.array(obs), novelty_vectors
+        return rews, t, novelty_vectors
 
 
 class GARecurrentAtariPolicy(GAAtariPolicy):

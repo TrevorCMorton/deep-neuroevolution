@@ -19,7 +19,10 @@ def setup(exp, single_threaded):
             from .atari_wrappers import wrap_deepmind
             env[i] = wrap_deepmind(env[i])
     sess = make_session(single_threaded=single_threaded)
-    policy = getattr(policies, exp['policy']['type'])(env[0].observation_space, env[0].action_space, **exp['policy']['args'])
+    max_action = 0
+    for en in env:
+        max_action = max(en.action_space.n, max_action)
+    policy = getattr(policies, exp['policy']['type'])(env[0].observation_space, max_action, **exp['policy']['args'])
     tf_util.initialize()
     return config, env, sess, policy
 
@@ -267,17 +270,22 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
         if rs.rand() < config.eval_prob:
             # Evaluation: noiseless weights and noiseless actions
             policy.set_trainable_flat(task_data.params)
-            eval_rews, eval_length, nov_vector = policy.rollout(env)  # eval rollouts don't obey task_data.timestep_limit
-            if exp['algo_type'] == 'ns':
-                eval_return = compute_novelty_vs_archive(worker.get_archive(), nov_vector, exp['novelty_search']['k'], True)
-            elif exp['algo_type'] == 'arns':
-                nov_val = 0
-                archive = worker.get_archive()
-                for nov_vec in nov_vector:
+            eval_rews, eval_length, nov_vectors = policy.rollout(env)  # eval rollouts don't obey task_data.timestep_limit
+
+            nov_val = 0
+            archive = worker.get_archive()
+            for nov_vec in nov_vectors:
+                if exp['algo_type'] == 'ans':
+                    nov_val += compute_novelty_vs_archive_levenshtein(worker.get_archive(), nov_vec, exp['novelty_search']['k'])
+                else:
                     nov_val += compute_novelty_vs_archive(archive, nov_vec, exp['novelty_search']['k'], True)
+
+            if exp['algo_type'] == 'ns':
+                eval_return = nov_val
+            elif exp['algo_type'] == 'arns':
                 eval_return = nov_val
             elif exp['algo_type'] == 'ans':
-                eval_return = compute_novelty_vs_archive_levenshtein(worker.get_archive(), nov_vector, exp['novelty_search']['k'])
+                eval_return = nov_val
             else:
                 eval_return = eval_rews.sum()
             logger.info('Eval result: task={} return={:.3f} length={}'.format(task_id, eval_return, eval_length))
@@ -316,33 +324,33 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                     v += config.noise_stdev * noise.get(seed, policy.num_params)
                 policy.set_trainable_flat(v)
 
-                rews_pos, len_pos, rollout_nov = rollout_and_update_ob_stat(
+                rews_pos, len_pos, rollout_novs = rollout_and_update_ob_stat(
                     policy, env, task_data.timestep_limit, rs, task_ob_stat, config.calc_obstat_prob)
                 noise_inds.append(seeds)
 
-                nov_vectors.append(rollout_nov)
+                nov_vectors.extend(rollout_novs)
+
+                nov_val = 0
+                archive = worker.get_archive()
+                for nov_vec in rollout_novs:
+                    if exp['algo_type'] == 'ans':
+                        nov_val += compute_novelty_vs_archive_levenshtein(worker.get_archive(), nov_vec, exp['novelty_search']['k'])
+                    else:
+                        nov_val += compute_novelty_vs_archive(archive, nov_vec, exp['novelty_search']['k'], True)
 
                 if exp['algo_type'] == 'ns':
-                    nov_val = compute_novelty_vs_archive(worker.get_archive(), rollout_nov, exp['novelty_search']['k'], True)
                     returns.append(nov_val)
                     signreturns.append(-nov_val)
                     org_stats.append([rews_pos.sum(), nov_val])
                 elif exp['algo_type'] == 'ans':
-                    nov_val = compute_novelty_vs_archive_levenshtein(worker.get_archive(), rollout_nov, exp['novelty_search']['k'])
                     returns.append(nov_val)
                     signreturns.append(-nov_val)
                     org_stats.append([rews_pos.sum(), nov_val])
                 elif exp['algo_type'] == 'arns':
-                    nov_val = 0
-                    archive = worker.get_archive()
-                    for nov_vec in rollout_nov:
-                        nov_val += compute_novelty_vs_archive(archive, nov_vec, exp['novelty_search']['k'], True)
-
                     returns.append(nov_val)
                     signreturns.append(-nov_val)
                     org_stats.append([rews_pos.sum(), nov_val])
                 elif exp['algo_type'] == 'nsr':
-                    nov_val = compute_novelty_vs_archive(worker.get_archive(), rollout_nov, exp['novelty_search']['k'], True)
                     hybrid_return = (rews_pos.sum() / task_data.rew_max + nov_val / task_data.nov_max) / 2
                     returns.append(hybrid_return)
                     signreturns.append(-hybrid_return)

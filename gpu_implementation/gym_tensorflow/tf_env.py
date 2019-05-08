@@ -91,7 +91,10 @@ class GymEnv(PythonEnv):
     @property
     def action_space(self):
         #return np.prod(self.env[0].action_space.shape, dtype=np.int32)
-        return self.env[0].action_space.n
+        m = 0
+        for en in self.env:
+            m = max(en.action_space.n, m)
+        return m
 
     @property
     def observation_space(self):
