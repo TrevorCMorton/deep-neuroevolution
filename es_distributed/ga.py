@@ -169,11 +169,9 @@ def run_master(master_redis_cfg, log_dir, exp):
 
             # Update novelty archive
             # for nov_vector in r.nov_vectors:
-            #     if exp['algo_type'] == 'arns':
-            #         for nov_vec in nov_vector:
-            #             master.add_to_novelty_archive(nov_vec)
-            #     else:
-            #         master.add_to_novelty_archive(nov_vector)
+        #         for nov_vec in nov_vector:
+        #             master.add_to_novelty_archive(nov_vec)
+
 
         noise_inds_n = np.array(noise_inds_n)
         returns_n2 = np.array(returns_n2)
@@ -232,11 +230,8 @@ def run_master(master_redis_cfg, log_dir, exp):
         tlogger.dump_tabular()
 
         nov = get_policy_novelty(env, policy, config.timesteps_per_batch)
-        if exp['algo_type'] == 'arns':
-            for nov_vec in nov:
-                master.add_to_novelty_archive(nov_vec)
-        else:
-            master.add_to_novelty_archive(nov)
+        for nov_vec in nov:
+            master.add_to_novelty_archive(nov_vec)
 
         # if config.snapshot_freq != 0 and curr_task_id % config.snapshot_freq == 0:
         if config.snapshot_freq != 0:
