@@ -19,9 +19,10 @@ def setup(exp, single_threaded):
             from .atari_wrappers import wrap_deepmind
             env[i] = wrap_deepmind(env[i])
     sess = make_session(single_threaded=single_threaded)
-    max_action = 0
+    max_action = env[0].action_space
     for en in env:
-        max_action = max(en.action_space.n, max_action)
+        if en.action_space.n > max_action.n:
+            max_action = en.aciton_space
     policy = getattr(policies, exp['policy']['type'])(env[0].observation_space, max_action, **exp['policy']['args'])
     tf_util.initialize()
     return config, env, sess, policy
