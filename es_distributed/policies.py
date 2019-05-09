@@ -503,7 +503,7 @@ class GAAtariPolicy(Policy):
             for j in range(timestep_limit):
                 ac = self.act(ob[None], random_stream=random_stream)[0]
 
-                if ac >= max_actions:
+                if ac >= env[i].action_space.n:
                     ac = 0
 
                 actions_chosen[ac] += 1
