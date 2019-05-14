@@ -148,7 +148,8 @@ def run_master(master_redis_cfg, log_dir, exp):
                             writer.writerow(row)
 
                             if exp['algo_type'] != 'ga':
-                                rew_max = max(stat[0], abs(rew_max))
+                                print(stat[0])
+                                rew_max = max(abs(stat[0]), rew_max)
                                 nov_max = max(stat[1], nov_max)
 
                 else:
