@@ -148,7 +148,7 @@ def run_master(master_redis_cfg, log_dir, exp):
                             writer.writerow(row)
 
                             if exp['algo_type'] != 'ga':
-                                rew_max = max(stat[0], rew_max)
+                                rew_max = max(stat[0], abs(rew_max))
                                 nov_max = max(stat[1], nov_max)
 
                 else:
@@ -238,7 +238,7 @@ def run_master(master_redis_cfg, log_dir, exp):
             import os.path as osp
             filename = 'snapshot_iter{:05d}_rew{}.h5'.format(
                 curr_task_id,
-                np.nan if not eval_rets else '%.3f'%(population_score[0])
+                '%.3f'%(population_score[0])
             )
             assert not osp.exists(filename)
             policy.save(filename)
@@ -280,6 +280,9 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                 eval_return = nov_val
             elif exp['algo_type'] == 'arns':
                 eval_return = nov_val
+            elif exp['algo_type'] == 'nsr':
+                hybrid_return = (eval_rews.sum() / task_data.rew_max + nov_val / task_data.nov_max) / 2
+                eval_return = hybrid_return
             elif exp['algo_type'] == 'ans':
                 eval_return = nov_val
             else:
