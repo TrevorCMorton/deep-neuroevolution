@@ -517,7 +517,6 @@ class GAAtariPolicy(Policy):
                 ob, rew, done, info = env[i].step(ac)
                 rews.append(rew)
                 reward += rew
-                print(rew)
                 # novelty_vectors.append(np.array(env[i].unwrapped._get_ram())) # extracts RAM state information
 
                 t += 1
@@ -531,6 +530,8 @@ class GAAtariPolicy(Policy):
 
         # Copy over final positions to the max timesteps
         rews = np.array(rews, dtype=np.float32)
+
+        print('return={:.4f} len={}'.format(rews.sum(), t))
 
         #for en in env:
         #    novelty_vector.append(np.array(en.unwrapped._get_ram())) # extracts RAM state information
