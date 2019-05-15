@@ -22,7 +22,7 @@ def setup(exp, single_threaded):
     max_action = env[0].action_space
     for en in env:
         if en.action_space.n > max_action.n:
-            max_action = en.aciton_space
+            max_action = en.action_space
     policy = getattr(policies, exp['policy']['type'])(env[0].observation_space, max_action, **exp['policy']['args'])
     tf_util.initialize()
     return config, env, sess, policy
