@@ -50,7 +50,6 @@ def main(env_ids, policy_directory, record, stochastic, extra_kwargs):
                 while True:
                     if is_atari_policy:
                         rews, t, novelty_vector = pi.rollout(env, render=True, random_stream=np.random if stochastic else None)
-                        print('return={:.4f} len={}'.format(rews.sum(), t))
 
     for i in range(0, files):
         os.wait()
