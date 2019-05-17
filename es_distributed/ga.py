@@ -369,9 +369,11 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                     org_stats.append([rewards, nov_val])
                 elif exp['algo_type'] == 'nsr':
                     hybrid_reward = 0
+                    max_reward = 0
                     for i in range(len(rews_pos)):
-                        hybrid_reward += rewards[i] #/ task_data.rew_max[i]
-                    #hybrid_reward /= 2
+                        hybrid_reward += rewards[i]
+                        max_reward += task_data.rew_max[i]
+                    hybrid_reward /= max_reward
 
                     hybrid_return = (hybrid_reward + nov_val / task_data.nov_max) / 2
                     returns.append(hybrid_return)
