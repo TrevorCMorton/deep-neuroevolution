@@ -76,7 +76,7 @@ def run_master(master_redis_cfg, log_dir, exp):
     num_elites = exp['num_elites']
     population_score = np.array([])
     rew_max = np.ones((len(env)))
-    nov_max = np.ones((len(env)))
+    nov_max = 1
 
     stats_file = "data.csv"
 
