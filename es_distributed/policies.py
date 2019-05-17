@@ -477,6 +477,7 @@ class GAAtariPolicy(Policy):
         """
         env_timestep_limit = env[0].spec.tags.get('wrapper_config.TimeLimit.max_episode_steps')
         timestep_limit = env_timestep_limit if timestep_limit is None else min(timestep_limit, env_timestep_limit)
+        rewards = []
         rews = []; novelty_vectors = []
         rollout_details = {}
         t = 0
@@ -527,19 +528,18 @@ class GAAtariPolicy(Policy):
 
             repetitions += repetitions == 0
             novelty_vectors.append(np.concatenate([actions_chosen / j, actions_chosen / repetitions, [reward / j], [reward]]))
-
-        # Copy over final positions to the max timesteps
-        rews = np.array(rews, dtype=np.float32)
-
-        print('return={:.4f} len={}'.format(rews.sum(), t))
+            rews = np.array(rews, dtype=np.float32)
+            print('return={:.4f} len={}'.format(rews.sum(), t))
+            rewards.append(rews)
+            rews = []
 
         #for en in env:
         #    novelty_vector.append(np.array(en.unwrapped._get_ram())) # extracts RAM state information
         #novelty_vector = np.concatenate(novelty_vector)
         #novelty_vector = actions
         if save_obs:
-            return rews, t, np.array(obs), novelty_vectors
-        return rews, t, novelty_vectors
+            return rewards, t, np.array(obs), novelty_vectors
+        return rewards, t, novelty_vectors
 
 
 class GARecurrentAtariPolicy(GAAtariPolicy):

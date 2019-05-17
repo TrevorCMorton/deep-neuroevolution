@@ -75,8 +75,8 @@ def run_master(master_redis_cfg, log_dir, exp):
     population_size = exp['population_size']
     num_elites = exp['num_elites']
     population_score = np.array([])
-    rew_max = 1
-    nov_max = 1
+    rew_max = np.ones((len(env)))
+    nov_max = np.ones((len(env)))
 
     stats_file = "data.csv"
 
@@ -144,12 +144,16 @@ def run_master(master_redis_cfg, log_dir, exp):
 
                         for stat in result.organism_stats:
                             row = [curr_task_id]
-                            row.extend(stat)
+                            row.extend(stat[0])
+                            #row.append(stat[1])
                             writer.writerow(row)
 
                             if exp['algo_type'] != 'ga':
                                 print(stat[0])
-                                rew_max = max(abs(stat[0]), rew_max)
+
+                                for i in range(len(env)):
+                                    rew_max[i] = max(abs(stat[0][i]), rew_max[i])
+
                                 nov_max = max(stat[1], nov_max)
 
                 else:
@@ -277,17 +281,23 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                 else:
                     nov_val += compute_novelty_vs_archive(archive, nov_vec, exp['novelty_search']['k'], True)
 
+            total_reward = 0
+            rewards = []
+            for i in range(len(eval_rews)):
+                val = eval_rews[i].sum()
+                total_reward += val
+                rewards.append(val)
+
             if exp['algo_type'] == 'ns':
                 eval_return = nov_val
             elif exp['algo_type'] == 'arns':
                 eval_return = nov_val
             elif exp['algo_type'] == 'nsr':
-                hybrid_return = (eval_rews.sum() / task_data.rew_max + nov_val / task_data.nov_max) / 2
-                eval_return = hybrid_return
+                eval_return = total_reward
             elif exp['algo_type'] == 'ans':
                 eval_return = nov_val
             else:
-                eval_return = eval_rews.sum()
+                eval_return = total_reward
             logger.info('Eval result: task={} return={:.3f} length={}'.format(task_id, eval_return, eval_length))
             worker.push_result(task_id, Result(
                 worker_id=worker_id,
@@ -338,27 +348,39 @@ def run_worker(master_redis_cfg, relay_redis_cfg, noise, *, min_task_runtime=.2)
                     else:
                         nov_val += compute_novelty_vs_archive(archive, nov_vec, exp['novelty_search']['k'], True)
 
+                total_reward = 0
+                rewards = []
+                for i in range(len(rews_pos)):
+                    val = rews_pos[i].sum()
+                    total_reward += val
+                    rewards.append(val)
+
                 if exp['algo_type'] == 'ns':
                     returns.append(nov_val)
                     signreturns.append(-nov_val)
-                    org_stats.append([rews_pos.sum(), nov_val])
+                    org_stats.append([rewards, nov_val])
                 elif exp['algo_type'] == 'ans':
                     returns.append(nov_val)
                     signreturns.append(-nov_val)
-                    org_stats.append([rews_pos.sum(), nov_val])
+                    org_stats.append([rewards, nov_val])
                 elif exp['algo_type'] == 'arns':
                     returns.append(nov_val)
                     signreturns.append(-nov_val)
-                    org_stats.append([rews_pos.sum(), nov_val])
+                    org_stats.append([rewards, nov_val])
                 elif exp['algo_type'] == 'nsr':
-                    hybrid_return = (rews_pos.sum() / task_data.rew_max + nov_val / task_data.nov_max) / 2
+                    hybrid_reward = 0
+                    for i in range(len(rews_pos)):
+                        hybrid_reward += rewards[i] / task_data.rew_max[i]
+                    hybrid_reward /= 2
+
+                    hybrid_return = (hybrid_reward + nov_val / task_data.nov_max) / 2
                     returns.append(hybrid_return)
                     signreturns.append(-hybrid_return)
-                    org_stats.append([rews_pos.sum(), nov_val])
+                    org_stats.append([rewards, nov_val])
                 elif exp['algo_type'] == 'ga':
-                    returns.append(rews_pos.sum())
-                    signreturns.append(np.sign(rews_pos).sum())
-                    org_stats.append([rews_pos.sum()])
+                    returns.append(total_reward)
+                    signreturns.append(-total_reward)
+                    org_stats.append([rewards])
 
                 lengths.append(len_pos)
 
