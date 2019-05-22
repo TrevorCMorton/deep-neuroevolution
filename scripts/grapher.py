@@ -1,7 +1,7 @@
 import csv
 import numpy as np
 
-input_file = "multiShooterNSR.csv"
+input_file = "dualNsrUnBalancedData.csv"
 
 generations_rew = {}
 generations_nov = {}
@@ -10,8 +10,8 @@ with open(input_file, newline='') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
         generation = int(row['Generation'])
-        reward = float(row['Reward'])
-        novelty = float(row['Novelty'])
+        reward = float(row['Game1'])
+        novelty = float(row['Game2'])
 
         if generation not in generations_rew:
             generations_rew[generation] = []
@@ -43,8 +43,8 @@ import matplotlib.pyplot as plt
 
 plt.plot(range(0, len(generations_nov)), average_rewards, label='average reward')
 plt.plot(range(0, len(generations_nov)), max_rewards, label='max reward')
-#plt.plot(range(0, len(generations_nov)), average_novelties, label='average novelty')
-#plt.plot(range(0, len(generations_nov)), max_novelties, label='max novelty')
+plt.plot(range(0, len(generations_nov)), average_novelties, label='average novelty')
+plt.plot(range(0, len(generations_nov)), max_novelties, label='max novelty')
 
 plt.legend()
 plt.xlabel('generations')

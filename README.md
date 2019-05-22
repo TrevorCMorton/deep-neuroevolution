@@ -44,39 +44,16 @@ launch redis
 . scripts/local_run_redis.sh
 ```
 
-launch sample ES experiment
-```
-. scripts/local_run_exp.sh es configurations/frostbite_es.json  # For the Atari game Frostbite
-. scripts/local_run_exp.sh es configurations/humanoid.json  # For the MuJoCo Humanoid-v1 environment
-```
-
-launch sample NS-ES experiment
-```
-. scripts/local_run_exp.sh ns-es configurations/frostbite_nses.json
-. scripts/local_run_exp.sh ns-es configurations/humanoid_nses.json
-```
-
-launch sample NSR-ES experiment
-```
-. scripts/local_run_exp.sh nsr-es configurations/frostbite_nsres.json
-. scripts/local_run_exp.sh nsr-es configurations/humanoid_nsres.json
-```
-
 launch sample GA experiment
 ```
 . scripts/local_run_exp.sh ga configurations/frostbite_ga.json  # For the Atari game Frostbite
+. scripts/local_run_exp.sh ga configurations/multi_nsr.json  # For Frostbite and TimePilot trained at the same time using hybrid fitness
 ```
 
-launch sample Random Search experiment
+visualize results by running policy files, script will run all the files in the given directory
 ```
-. scripts/local_run_exp.sh rs configurations/frostbite_ga.json  # For the Atari game Frostbite
-```
-
-
-visualize results by running a policy file
-```
-python -m scripts.viz 'FrostbiteNoFrameskip-v4' <YOUR_H5_FILE>
-python -m scripts.viz 'Humanoid-v1' <YOUR_H5_FILE>
+python -m scripts.viz 'FrostbiteNoFrameskip-v4' <YOUR_H5_FILE_DIRECTORY>
+python -m scripts.viz 'FrostbiteNoFrameskip-v4 TimePilotNoFrameskip-v4' <YOUR_H5_FILE_DIRECTORY>
 ```
 
 ### extra folder

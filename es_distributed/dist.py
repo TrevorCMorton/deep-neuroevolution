@@ -63,10 +63,12 @@ class MasterClient:
     def __init__(self, master_redis_cfg):
         self.task_counter = 0
         self.master_redis = retry_connect(master_redis_cfg)
+        self.max_size = None
         logger.info('[master] Connected to Redis: {}'.format(self.master_redis))
 
     def declare_experiment(self, exp):
         self.master_redis.set(EXP_KEY, serialize(exp))
+        self.max_size = exp['archive_size']
         logger.info('[master] Declared experiment {}'.format(pformat(exp)))
 
     def declare_task(self, task_data):
@@ -92,6 +94,9 @@ class MasterClient:
     def add_to_novelty_archive(self, novelty_vector):
         self.master_redis.rpush(ARCHIVE_KEY, serialize(novelty_vector))
         logger.info('[master] Added novelty vector to archive')
+        length = self.master_redis.llen(ARCHIVE_KEY)
+        if self.max_size is not None and length > self.max_size:
+            self.master_redis.lpop(ARCHIVE_KEY)
 
     def get_archive(self):
         archive = self.master_redis.lrange(ARCHIVE_KEY, 0, -1)
