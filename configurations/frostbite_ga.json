@@ -13,7 +13,7 @@
   },
   "population_size": 10,
   "num_elites": 1,
-  "env_id": ["FrostbiteNoFrameskip-v4",],
+  "env_id": ["FrostbiteNoFrameskip-v4"],
   "policy": {
     "args" : {
       "nonlin_type": "relu"
