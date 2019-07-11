@@ -11,6 +11,7 @@
     "episode_cutoff_mode": 5000,
     "archive_size": 10000
   },
+  "algo_type": "nsr",
   "population_size": 10,
   "num_elites": 1,
   "env_id": ["FrostbiteNoFrameskip-v4"],
