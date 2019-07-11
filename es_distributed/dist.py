@@ -68,7 +68,7 @@ class MasterClient:
 
     def declare_experiment(self, exp):
         self.master_redis.set(EXP_KEY, serialize(exp))
-        self.max_size = exp['archive_size']
+        self.max_size = exp['config']['archive_size']
         logger.info('[master] Declared experiment {}'.format(pformat(exp)))
 
     def declare_task(self, task_data):
